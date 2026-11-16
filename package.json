@@ -1,0 +1,18 @@
+{
+  "name": "streiche-alarm",
+  "version": "1.0.0",
+  "description": "Streiche Alarm – Slapstick-Stealth-Multiplayer-Browsergame für 2 bis 6 Spieler (Büro, Krankenhaus, Villa, Baumarkt)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "express": "^4.22.3",
+    "socket.io": "^4.8.4"
+  }
+}
