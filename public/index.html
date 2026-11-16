@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Streiche Alarm – Das Slapstick-Duell</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="description" content="Streiche Alarm – das schadenfrohe Mehrspieler-Duell für 2 bis 6 Spieler. Fallen stellen, verstecken, Kaffee trinken – direkt im Browser und als App am Handy.">
+<meta name="theme-color" content="#2b1d5c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Streiche Alarm">
+<meta name="format-detection" content="telephone=no">
+<meta property="og:title" content="Streiche Alarm">
+<meta property="og:description" content="Komm in meine Runde! Fallen, Chaos & Schadenfreude – 2 bis 6 Spieler.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Wiederverwendbare SVG-Symbole: Logo (frech grinsende Alarm-Rundumleuchte) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="gShade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff7a7a"/>
+      <stop offset="1" stop-color="#e5243b"/>
+    </linearGradient>
+    <radialGradient id="gGlow" cx="0.5" cy="0.45" r="0.55">
+      <stop offset="0" stop-color="#fff3a8" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#fff3a8" stop-opacity="0"/>
+    </radialGradient>
+    <symbol id="sym-lampe" viewBox="0 0 120 140">
+      <!-- Leuchtschein -->
+      <circle cx="60" cy="62" r="58" fill="url(#gGlow)"/>
+      <!-- Alarm-Signalwellen links & rechts -->
+      <path d="M17 44 Q8 62 17 80" stroke="#ffd23f" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M6 36 Q-6 62 6 88" stroke="#ffd23f" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.75"/>
+      <path d="M103 44 Q112 62 103 80" stroke="#ffd23f" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M114 36 Q126 62 114 88" stroke="#ffd23f" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.75"/>
+      <!-- Leuchtkuppel -->
+      <path d="M30 100 L30 58 Q30 22 60 22 Q90 22 90 58 L90 100 Z" fill="url(#gShade)" stroke="#2b1d5c" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M40 36 Q44 28 52 27" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.7"/>
+      <!-- Spitzbübisches Gesicht -->
+      <path d="M38 47 L52 51" stroke="#2b1d5c" stroke-width="4" stroke-linecap="round"/>
+      <path d="M82 47 L68 51" stroke="#2b1d5c" stroke-width="4" stroke-linecap="round"/>
+      <ellipse cx="46" cy="60" rx="7" ry="8" fill="#fff" stroke="#2b1d5c" stroke-width="3"/>
+      <ellipse cx="74" cy="60" rx="7" ry="8" fill="#fff" stroke="#2b1d5c" stroke-width="3"/>
+      <circle cx="48.5" cy="61" r="3.4" fill="#2b1d5c"/>
+      <circle cx="76.5" cy="61" r="3.4" fill="#2b1d5c"/>
+      <path d="M44 74 Q60 92 78 72 Z" fill="#7a1030" stroke="#2b1d5c" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M54 82 Q62 88 70 80" fill="#ff8fab"/>
+      <circle cx="37" cy="74" r="4" fill="#ffb3c6" opacity="0.85"/>
+      <circle cx="84" cy="73" r="4" fill="#ffb3c6" opacity="0.85"/>
+      <!-- Sockel -->
+      <rect x="20" y="98" width="80" height="22" rx="7" fill="#2b1d5c"/>
+      <rect x="28" y="105" width="64" height="7" rx="3.5" fill="#ffd23f"/>
+      <!-- Knopf oben -->
+      <circle cx="60" cy="20" r="6" fill="#ffd23f" stroke="#2b1d5c" stroke-width="4"/>
+    </symbol>
+  </defs>
+</svg>
+
+<canvas id="world" aria-label="Spielwelt"></canvas>
+<div id="bgDeco" aria-hidden="true"></div>
+
+<div id="connBanner" class="hidden">📡 Verbindung verloren – verbinde neu …</div>
+
+<!-- ============ ERSTEINRICHTUNG ============ -->
+<section id="scr-setup" class="screen hidden">
+  <div class="menu-card setup-card pop-in">
+    <div class="logo-block">
+      <svg class="logo-lamp wobble"><use href="#sym-lampe"/></svg>
+      <h1 class="wordmark">Streiche Alarm</h1>
+      <p class="tagline">Das schadenfrohe Streiche-Duell für 2–6 Spieler</p>
+    </div>
+
+    <div id="setupNew">
+      <h2 class="card-title">Dein Spieler-Ausweis</h2>
+      <label class="field">
+        <span>Spielername</span>
+        <input id="setupName" type="text" maxlength="16" autocomplete="nickname" placeholder="z. B. René" enterkeyhint="next">
+      </label>
+      <label class="field">
+        <span>Dein 4-stelliger Code</span>
+        <div class="code-row">
+          <input id="setupCode" class="code-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="····" enterkeyhint="go">
+          <button id="setupDice" class="btn btn-icon" type="button" title="Neuen sicheren Code vorschlagen">🎲</button>
+        </div>
+      </label>
+      <p id="setupHint" class="hint">Wähle selbst 4 Ziffern oder nimm den Vorschlag. Einfache Folgen wie 1234 oder 0000 sind nicht erlaubt.</p>
+      <p id="setupErr" class="err"></p>
+      <button id="setupGo" class="btn btn-primary btn-big" type="button">🎉 Los geht's!</button>
+      <button id="setupToLoad" class="btn btn-link" type="button">Ich habe schon einen Spielstand → laden</button>
+    </div>
+
+    <div id="setupLoad" class="hidden">
+      <h2 class="card-title">Spielstand laden</h2>
+      <p class="hint">Name + 4-stelliger Code – so holst du dir Level, Münzen und Charakter auf dieses Gerät.</p>
+      <label class="field">
+        <span>Spielername</span>
+        <input id="loadName" type="text" maxlength="16" autocomplete="nickname" placeholder="Dein Name">
+      </label>
+      <label class="field">
+        <span>4-stelliger Code</span>
+        <input id="loadCode" class="code-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="····">
+      </label>
+      <p id="loadErr" class="err"></p>
+      <button id="loadGo" class="btn btn-primary btn-big" type="button">🔓 Spielstand laden</button>
+      <button id="loadBack" class="btn btn-link" type="button">← Neuen Ausweis anlegen</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STARTSEITE ============ -->
+<section id="scr-home" class="screen hidden">
+  <div class="home-wrap">
+    <header class="home-head">
+      <div class="logo-inline">
+        <svg class="logo-lamp-sm wobble"><use href="#sym-lampe"/></svg>
+        <span class="wordmark wordmark-sm">Streiche Alarm</span>
+      </div>
+      <button id="homeProfileChip" class="profile-chip" type="button" title="Charakter bearbeiten">
+        <canvas id="chipAvatar" width="72" height="72"></canvas>
+        <span class="chip-text"><b id="chipName">–</b><small><span id="chipLevel">Lvl 1</span> · <span id="chipCoins">🪙 0</span></small></span>
+      </button>
+    </header>
+
+    <div class="home-grid">
+      <div class="home-col">
+        <div id="ausweisCard" class="ausweis pop-in">
+          <div class="ausweis-top">
+            <span class="ausweis-label">🪪 SPIELER-AUSWEIS</span>
+            <span class="ausweis-level" id="ausweisLevel">Level 1</span>
+          </div>
+          <div class="ausweis-body">
+            <canvas id="ausweisAvatar" width="200" height="220"></canvas>
+            <div class="ausweis-data">
+              <div class="ausweis-row"><small>Name</small><b id="ausweisName">–</b></div>
+              <div class="ausweis-row"><small>Code</small><b id="ausweisCode" class="ausweis-code">····</b></div>
+              <button id="ausweisCopy" class="btn btn-small btn-light" type="button">📋 Kopieren</button>
+            </div>
+          </div>
+          <div class="ausweis-xp"><div id="ausweisXpBar"></div><span id="ausweisXpText">0 / 150 XP</span></div>
+          <p class="ausweis-hint">Merke dir deinen Namen &amp; 4-stelligen Code für andere Geräte!</p>
+        </div>
+
+        <div class="play-box">
+          <button id="btnCreate" class="btn btn-primary btn-big" type="button">🎉 Raum erstellen</button>
+          <div class="join-row">
+            <input id="joinCode" class="room-input" type="text" maxlength="4" autocomplete="off" autocapitalize="characters" placeholder="CODE" enterkeyhint="go">
+            <button id="btnJoin" class="btn btn-secondary" type="button">Beitreten</button>
+          </div>
+          <p id="homeErr" class="err"></p>
+        </div>
+      </div>
+
+      <div class="home-col">
+        <div class="rooms-box">
+          <h3 class="box-title"><span class="live-dot"></span> Offene Räume</h3>
+          <div id="roomList" class="room-list"></div>
+        </div>
+
+        <div class="menu-grid">
+          <button class="tile t-editor" data-open="editor" type="button"><span>🎨</span>Charakter</button>
+          <button class="tile t-shop" data-open="shop" type="button"><span>🛒</span>Prank-Shop</button>
+          <button class="tile t-board" data-open="board" type="button"><span>🏆</span>Bestenliste</button>
+          <button class="tile t-daily" data-open="daily" type="button"><span>📅</span>Tagesziele<em id="dailyBadge" class="badge hidden">!</em></button>
+          <button class="tile t-settings" data-open="settings" type="button"><span>⚙️</span>Einstellungen</button>
+          <button class="tile t-full" id="btnFullscreenHome" type="button"><span>⛶</span>Vollbild</button>
+          <button class="tile t-install" data-open="install" type="button"><span>📲</span>Als App</button>
+          <button class="tile t-help" data-open="help" type="button"><span>❓</span>So geht's</button>
+        </div>
+
+        <button id="btnLogout" class="btn btn-link" type="button">Anderen Spielstand laden / abmelden</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LOBBY ============ -->
+<section id="scr-lobby" class="hidden">
+  <div id="lobbyPanel" class="lobby-panel">
+    <button id="lobbyToggle" class="lobby-toggle" type="button" aria-label="Lobby ein-/ausklappen">
+      <span class="grip"></span>
+      <span id="lobbyToggleText">Lobby</span>
+      <span id="lobbyToggleArrow">▼</span>
+    </button>
+    <div class="lobby-scroll">
+      <div class="lobby-head">
+        <div>
+          <small>Raum-Code</small>
+          <div id="lobbyCode" class="lobby-code">····</div>
+        </div>
+        <button id="lobbyLeave" class="btn btn-small btn-danger" type="button">✖ Verlassen</button>
+      </div>
+      <a id="btnWhatsApp" class="btn btn-whatsapp btn-big" href="#" target="_blank" rel="noopener">
+        <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><path fill="#fff" d="M16 3C8.8 3 3 8.7 3 15.8c0 2.5.7 4.9 2 7L3 29l6.4-2c2 1.1 4.3 1.7 6.6 1.7 7.2 0 13-5.7 13-12.8S23.2 3 16 3zm0 23.4c-2.1 0-4.1-.6-5.9-1.7l-.4-.3-3.8 1.2 1.2-3.7-.3-.4a10.4 10.4 0 0 1-1.7-5.7C5.1 9.9 10 5.2 16 5.2s10.9 4.7 10.9 10.6S22 26.4 16 26.4zm6-7.9c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2l-1 1.2c-.2.2-.4.2-.7.1-1.9-.9-3.2-1.7-4.4-3.8-.3-.6.3-.5 1-1.8.1-.2 0-.4 0-.6l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.7s1.2 3.2 1.4 3.4c.2.2 2.4 3.7 5.8 5.1 2.2.9 3 1 4.1.8.7-.1 1.9-.8 2.2-1.5.3-.8.3-1.4.2-1.5-.1-.2-.3-.3-.6-.4z"/></svg>
+        Freunde per WhatsApp herholen
+      </a>
+      <div class="lobby-links">
+        <button id="lobbyCopyLink" class="btn btn-small btn-light" type="button">🔗 Link kopieren</button>
+        <button id="lobbyShare" class="btn btn-small btn-light" type="button">📤 Teilen</button>
+      </div>
+
+      <h3 class="box-title">Spieler <span id="lobbyCount">0/6</span></h3>
+      <div id="lobbyPlayers" class="lobby-players"></div>
+      <div id="lobbyBotRow" class="bot-row">
+        <button id="botAdd" class="btn btn-small btn-light" type="button">🤖 + Bot</button>
+        <button id="botRemove" class="btn btn-small btn-light" type="button">🤖 − Bot</button>
+      </div>
+
+      <h3 class="box-title">Spielmodus</h3>
+      <div id="modeCards" class="mode-cards"></div>
+
+      <h3 class="box-title">Gebäude</h3>
+      <div id="buildingCards" class="building-cards"></div>
+
+      <div id="durationRow" class="setting-row">
+        <span>⏱ Dauer</span>
+        <div class="seg" id="durationSeg">
+          <button type="button" data-val="3">3 Min.</button>
+          <button type="button" data-val="5">5 Min.</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span>🪤 Fallen-Regel</span>
+        <div class="seg" id="trapRuleSeg">
+          <button type="button" data-val="schnell">Schnell-Sabotage</button>
+          <button type="button" data-val="items">+ Sammel-Items</button>
+        </div>
+      </div>
+      <p id="trapRuleHint" class="hint small"></p>
+      <div class="setting-row">
+        <span>🎊 Party-Modus<br><small>Alle Gebäude &amp; Fallen für alle</small></span>
+        <label class="switch"><input id="partyToggle" type="checkbox"><i></i></label>
+      </div>
+
+      <div id="lobbyHostNote" class="hint"></div>
+      <button id="btnStart" class="btn btn-primary btn-big btn-start" type="button">▶ Runde starten</button>
+      <p class="hint small center">Tipp: Klapp die Lobby ein und probier auf dem Übungsplatz schon mal Fallen aus!</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SPIEL-HUD ============ -->
+<div id="hud" class="hidden">
+  <div class="hud-top">
+    <div class="hud-left">
+      <div id="hudTimer" class="pill pill-timer">⏱ <b>0:00</b></div>
+      <div id="hudMode" class="pill pill-mode"><span id="hudModeIco">✅</span><span id="hudModeTxt" class="mode-txt"></span></div>
+      <button id="hudMenuBtn" class="pill pill-btn" type="button" title="Menü">☰</button>
+    </div>
+    <div id="hudGoal" class="hud-goal"></div>
+    <div class="hud-right">
+      <canvas id="minimap" width="150" height="150" title="Karte (antippen zum Vergrößern)"></canvas>
+      <div id="scoreboard" class="scoreboard"></div>
+    </div>
+    <div class="hud-status">
+      <div id="needBox" class="need-box hidden">
+        <span id="needIcon" class="need-icon">☕</span>
+        <div class="need-info">
+          <b id="needLabel">Kaffee!</b>
+          <div class="need-bar"><i id="needBar"></i></div>
+        </div>
+      </div>
+      <div id="statusChips" class="status-chips"></div>
+      <div id="chaosBox" class="chaos-box" title="Chaos-Barometer">
+        <span>🌀</span>
+        <div class="chaos-bar"><i id="chaosBar"></i></div>
+      </div>
+      <div id="heldItems" class="held-items"></div>
+    </div>
+  </div>
+
+  <div id="specBanner" class="spec-banner hidden">
+    👀 Zuschauer-Modus – nächste Runde bist du dabei!
+    <button id="specNext" class="btn btn-small btn-light" type="button">Nächster Spieler ▶</button>
+  </div>
+
+  <div id="buildBar" class="build-bar hidden">
+    <div class="build-main">
+      <div class="build-label" id="buildLabel">Falle wird gebaut …</div>
+      <div class="build-track"><i id="buildFill"></i></div>
+    </div>
+    <button id="buildCancel" class="btn btn-small btn-danger" type="button" aria-label="Abbrechen">✖</button>
+  </div>
+
+  <div id="hudMenu" class="hud-menu hidden">
+    <button id="hudFullscreen" class="btn btn-light" type="button">⛶ Vollbild</button>
+    <button id="hudSettings" class="btn btn-light" type="button">⚙️ Einstellungen</button>
+    <button id="hudHelp" class="btn btn-light" type="button">❓ Steuerung</button>
+    <button id="hudLeave" class="btn btn-danger" type="button">🚪 Raum verlassen</button>
+  </div>
+</div>
+
+<!-- Touch-Steuerung -->
+<div id="controls" class="hidden">
+  <div id="joyZone"></div>
+  <div id="joyBase" class="hidden"><div id="joyKnob"></div></div>
+  <div id="actionPad">
+    <button id="btnUse" class="act act-use" type="button"><span class="act-ico">✋</span><span class="act-lbl">Benutzen</span></button>
+    <button id="btnTrap" class="act act-trap" type="button"><span class="act-ico">🪤</span><span class="act-lbl">Falle</span></button>
+    <button id="btnHide" class="act act-hide" type="button"><span class="act-ico">🙈</span><span class="act-lbl">Verstecken</span></button>
+    <button id="btnWave" class="act act-wave" type="button"><span class="act-ico">👋</span><span class="act-lbl">Winken</span><i class="cd"></i></button>
+    <button id="btnDisguise" class="act act-dg" type="button"><span class="act-ico">🥸</span><span class="act-lbl">Tarnen</span><i class="cd"></i></button>
+    <button id="btnEmoji" class="act act-emo" type="button"><span class="act-ico">😂</span></button>
+  </div>
+  <div id="emojiBar" class="emoji-bar hidden"></div>
+</div>
+
+<!-- Fallen-Auswahlrad -->
+<div id="wheel" class="hidden" role="dialog" aria-label="Fallen-Auswahlrad">
+  <div class="wheel-wrap">
+    <svg id="wheelSvg" viewBox="-200 -200 400 400"></svg>
+    <div id="wheelInfo" class="wheel-info"></div>
+  </div>
+</div>
+
+<div id="countdown" class="countdown hidden"></div>
+<div id="bigMsg" class="big-msg hidden"></div>
+
+<!-- ============ ERGEBNIS ============ -->
+<section id="scr-results" class="screen-overlay hidden">
+  <div class="menu-card results-card pop-in">
+    <div id="resTitle" class="res-title">🏆 Runde vorbei!</div>
+    <div id="resSub" class="res-sub"></div>
+    <div id="resPodium" class="podium"></div>
+    <div id="resList" class="res-list"></div>
+    <div id="resRewards" class="rewards"></div>
+    <div class="res-buttons">
+      <button id="resAgain" class="btn btn-primary btn-big" type="button">🔁 Nochmal!</button>
+      <button id="resMenu" class="btn btn-light" type="button">🏠 Zum Menü</button>
+    </div>
+    <p id="resAuto" class="hint small center"></p>
+  </div>
+</section>
+
+<!-- ============ SHEETS / OVERLAYS ============ -->
+<section id="sheet" class="sheet-wrap hidden">
+  <div class="sheet pop-in">
+    <header class="sheet-head">
+      <h2 id="sheetTitle">–</h2>
+      <span id="sheetCoins" class="coins-pill">🪙 0</span>
+      <button id="sheetClose" class="btn btn-icon btn-light" type="button" aria-label="Schließen">✖</button>
+    </header>
+    <div id="sheetBody" class="sheet-body"></div>
+  </div>
+</section>
+
+<section id="modal" class="modal-wrap hidden">
+  <div class="modal pop-in">
+    <div id="modalText" class="modal-text"></div>
+    <div class="modal-buttons">
+      <button id="modalNo" class="btn btn-light" type="button">Abbrechen</button>
+      <button id="modalYes" class="btn btn-primary" type="button">OK</button>
+    </div>
+  </div>
+</section>
+
+<div id="toasts" aria-live="polite"></div>
+
+<div id="loading" class="loading">
+  <svg class="logo-lamp wobble"><use href="#sym-lampe"/></svg>
+  <div class="wordmark">Streiche Alarm</div>
+  <div class="loading-dots"><i></i><i></i><i></i></div>
+</div>
+
+<noscript><div class="noscript">Für Streiche Alarm brauchst du JavaScript.</div></noscript>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
